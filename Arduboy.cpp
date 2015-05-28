@@ -507,49 +507,56 @@ void Arduboy::fillTriangle (int16_t x0, int16_t y0, int16_t x1, int16_t y1, int1
 }
 
 void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint8_t color) {
-  // no need to dar at all of we're offscreen
+  // no need to draw at all of we're offscreen
   if (x+w < 0 || x > WIDTH-1 || y+h < 0 || y > HEIGHT-1)
     return;
 
   int yOffset = abs(y) % 8;
+  int xOffset;
   int sRow = y / 8;
   int ofs2;
   uint8_t loop_w;
+
   if (y < 0) {
     sRow--;
     yOffset = 8 - yOffset;
   }
+
   // don't loop over the full width if it will not be rendered anyways
   if (x+w > WIDTH-1) {
     loop_w = WIDTH-x;
   } else {
     loop_w = w;
   }
+  // if x is off screen we can completely skip some loops against bitmap
+  if (x<0) {
+    xOffset = abs(x);
+  } else {
+    xOffset = 0;
+  }
+
   for (uint8_t a = 0; a < h/8; a++) {
     uint8_t bRow = sRow + a;
     if (bRow > (HEIGHT/8)-1) break;
     if (bRow > -2) {
       // uint8_t bofs = *bitmap+(a*w);
-      uint8_t *bofs = (uint8_t *)bitmap+(a*w);
+      uint8_t *bofs = (uint8_t *)bitmap+(a*w) + xOffset;
       int ofs = (bRow*WIDTH) + x;
       if (yOffset) {
         ofs2 = ((bRow+1)*WIDTH) + x;
       }
-      for (uint8_t iCol = 0; iCol < loop_w; iCol++) {
-        int iColx = (int)iCol + x;
+      for (uint8_t iCol = xOffset; iCol < loop_w; iCol++) {
         // if (iColx > (WIDTH-1)) break;
-        if (iColx > 0) {
-          if (bRow >= 0) {
-            if (color) this->sBuffer[ofs] = pgm_read_byte(bofs) << yOffset;
-            else this->sBuffer[ofs]  &= ~(pgm_read_byte(bofs) << yOffset);
-          }
-          if (yOffset) {
-            if (color) this->sBuffer[ofs2] = pgm_read_byte(bofs) >> (8-yOffset);
-            else this->sBuffer[ofs2] &= ~(pgm_read_byte(bofs) >> (8-yOffset));
-          }
+        if (bRow >= 0) {
+          if (color) this->sBuffer[ofs++] = pgm_read_byte(bofs) << yOffset;
+          else this->sBuffer[ofs++]  &= ~(pgm_read_byte(bofs) << yOffset);
         }
-        ofs++;
-        if (yOffset) ofs2++;
+        if (yOffset) {
+          if (color) this->sBuffer[ofs2++] = pgm_read_byte(bofs) >> (8-yOffset);
+          else this->sBuffer[ofs2++] &= ~(pgm_read_byte(bofs) >> (8-yOffset));
+        }
+        // ofs++;
+        // if (yOffset) ofs2++;
         bofs++;
       }
     }
