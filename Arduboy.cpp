@@ -18,7 +18,7 @@ volatile unsigned long delay_toggle_count;     /* countdown tune_ delay() delays
 volatile const byte *score_start = 0;
 volatile const byte *score_cursor = 0;
 volatile boolean Arduboy::tune_playing = false;
-const unsigned int PROGMEM tune_frequencies2_PGM[128] = { 
+const unsigned int PROGMEM tune_frequencies2_PGM[128] = {
 16,17,18,19,21,22,23,24,26,28,29,31,33,35,37,39,41,44,46,49,52,55,58,62,65,
 69,73,78,82,87,92,98,104,110,117,123,131,139,147,156,165,175,185,196,208,220,
 233,247,262,277,294,311,330,349,370,392,415,440,466,494,523,554,587,622,659,
@@ -188,15 +188,15 @@ void Arduboy::start() {
     pinMode(10, INPUT_PULLUP); // D-Pad Down
     pinMode(5, INPUT_PULLUP);  // D-Pad Right
     pinMode(A0, INPUT_PULLUP); // A? Button
-    pinMode(A1, INPUT_PULLUP); // B? Button	
+    pinMode(A1, INPUT_PULLUP); // B? Button
     tune_initchan(A2);  // Speaker Pin 1
     tune_initchan(A3);  // Speaker Pin 2
-	
+
     csport      = portOutputRegister(digitalPinToPort(CS));
     cspinmask   = digitalPinToBitMask(CS);
     dcport      = portOutputRegister(digitalPinToPort(DC));
     dcpinmask   = digitalPinToBitMask(DC);
-    // Setup reset pin direction (used by both SPI and I2C)  
+    // Setup reset pin direction (used by both SPI and I2C)
     pinMode(RST, OUTPUT);
     digitalWrite(RST, HIGH);
     delay(1);               // VDD (3.3V) goes high at start, lets just chill for a ms
@@ -208,7 +208,7 @@ void Arduboy::start() {
     *csport &= ~cspinmask;
     SPI.transfer(0xAE);	// Display Off
     SPI.transfer(0XD5);	// Set Display Clock Divisor v
-    SPI.transfer(0xF0); // 0x80 is default 
+    SPI.transfer(0xF0); // 0x80 is default
     SPI.transfer(0xA8);	// Set Multiplex Ratio v
     SPI.transfer(0x3F); //
     SPI.transfer(0xD3); // Set Display Offset v
@@ -243,7 +243,7 @@ void Arduboy::start() {
     SPI.transfer(0x22); // set page address
     end = (HEIGHT/8)-1;
     SPI.transfer(0x00);
-    SPI.transfer(end & 0x07);	
+    SPI.transfer(end & 0x07);
     *dcport |= dcpinmask;
     *csport &= ~cspinmask;
     clearDisplay();
@@ -280,7 +280,7 @@ void Arduboy::drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
     x++;
     ddF_x += 2;
     f += ddF_x;
-  
+
     drawPixel(x0 + x, y0 + y, color);
     drawPixel(x0 - x, y0 + y, color);
     drawPixel(x0 + x, y0 - y, color);
@@ -289,7 +289,7 @@ void Arduboy::drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
     drawPixel(x0 - y, y0 + x, color);
     drawPixel(x0 + y, y0 - x, color);
     drawPixel(x0 - y, y0 - x, color);
-    
+
   }
 }
 void Arduboy::drawCircleHelper( int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color) {
@@ -311,7 +311,7 @@ void Arduboy::drawCircleHelper( int16_t x0, int16_t y0, int16_t r, uint8_t corne
     if (cornername & 0x4) {
       drawPixel(x0 + x, y0 + y, color);
       drawPixel(x0 + y, y0 + x, color);
-    } 
+    }
     if (cornername & 0x2) {
       drawPixel(x0 + x, y0 - y, color);
       drawPixel(x0 + y, y0 - x, color);
@@ -407,7 +407,7 @@ void Arduboy::drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) {
 void Arduboy::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t color) {
   // stupidest version - update in subclasses if desired!
   for (int16_t i=x; i<x+w; i++) {
-    drawFastVLine(i, y, h, color); 
+    drawFastVLine(i, y, h, color);
   }
 }
 void Arduboy::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
@@ -505,68 +505,32 @@ void Arduboy::fillTriangle (int16_t x0, int16_t y0, int16_t x1, int16_t y1, int1
     drawFastHLine(a, y, b-a+1, color);
   }
 }
-void Arduboy::drawBitmap
-(int16_t x,
- int16_t y,
- const uint8_t *bitmap,
- int16_t w,
- int16_t h,
- uint16_t color
-)
-{
-  //bitmap is off screen
-  if (x+w < 0 || x > WIDTH-1 || y+h < 0 || y > HEIGHT-1) return;
+
+void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint8_t color) {
+  // no need to dar at all of we're offscreen
+  if (x+w < 0 || x > WIDTH-1 || y+h < 0 || y > HEIGHT-1)
+    return;
 
   int yOffset = abs(y) % 8;
   int sRow = y / 8;
-
-  if (y < 0)
-  {
+  if (y < 0) {
     sRow--;
     yOffset = 8 - yOffset;
   }
-
-  for (int a = 0; a < h/8; a++)
-  {
+  for (int a = 0; a < h/8; a++) {
     int bRow = sRow + a;
     if (bRow > (HEIGHT/8)-1) break;
     if (bRow > -2) {
-      for (int iCol = 0; iCol<w; iCol++)
-      {
-        if (iCol + x > (WIDTH-1))
-        {
-          break;
-        }
-
-        if (iCol + x > 0)
-        {
-          if (bRow >= 0)
-          {
-            if (color)
-            {
-              this->sBuffer[ (bRow*WIDTH) + x + iCol  ]
-                //|= pgm_read_byte(bitmap+(a*w)+iCol) << yOffset;
-                = pgm_read_byte(bitmap+(a*w)+iCol) << yOffset; //changed to equals in order to overwrite the background, no clear required
-            }
-            else
-            {
-              this->sBuffer[ (bRow*WIDTH) + x + iCol  ]
-                &= ~(pgm_read_byte(bitmap+(a*w)+iCol) << yOffset);
-            }
+      for (int iCol = 0; iCol<w; iCol++) {
+        if (iCol + x > (WIDTH-1)) break;
+        if (iCol + x > 0) {
+          if (bRow >= 0) {
+            if (color) this->sBuffer[ (bRow*WIDTH) + x + iCol  ]  |= pgm_read_byte(bitmap+(a*w)+iCol) << yOffset;
+            else this->sBuffer[ (bRow*WIDTH) + x + iCol  ]  &= ~(pgm_read_byte(bitmap+(a*w)+iCol) << yOffset);
           }
-          if (yOffset && bRow<(HEIGHT/8)-1 && bRow > -2)
-          {
-            if (color)
-            {
-              this->sBuffer[ ((bRow+1)*WIDTH) + x + iCol  ]
-                //|= pgm_read_byte(bitmap+(a*w)+iCol) >> (8-yOffset);
-                = pgm_read_byte(bitmap+(a*w)+iCol) >> (8-yOffset); //changed to equals in order to overwrite the background, no clear required
-            }
-            else
-            {
-              this->sBuffer[ ((bRow+1)*WIDTH) + x + iCol  ]
-                &= ~(pgm_read_byte(bitmap+(a*w)+iCol) >> (8-yOffset));
-            }
+          if (yOffset && bRow<(HEIGHT/8)-1 && bRow > -2) {
+            if (color) this->sBuffer[ ((bRow+1)*WIDTH) + x + iCol  ] |= pgm_read_byte(bitmap+(a*w)+iCol) >> (8-yOffset);
+            else this->sBuffer[ ((bRow+1)*WIDTH) + x + iCol  ] &= ~(pgm_read_byte(bitmap+(a*w)+iCol) >> (8-yOffset));
           }
         }
       }
@@ -655,9 +619,9 @@ void Arduboy::drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, ui
     return;
   for (int8_t i=0; i<6; i++ ) {
     uint8_t line;
-    if (i == 5) 
+    if (i == 5)
       line = 0x0;
-    else 
+    else
       line = pgm_read_byte(font+(c*5)+i);
     for (int8_t j = 0; j<8; j++) {
       if (line & 0x1) {
@@ -665,13 +629,13 @@ void Arduboy::drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, ui
           drawPixel(x+i, y+j, color);
         else {  // big size
           fillRect(x+(i*size), y+(j*size), size, size, color);
-        } 
+        }
       } else if (bg != color) {
         if (size == 1) // default size
           drawPixel(x+i, y+j, bg);
         else {  // big size
           fillRect(x+i*size, y+j*size, size, size, bg);
-        } 	
+        }
       }
       line >>= 1;
     }
@@ -684,7 +648,7 @@ void Arduboy::drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, ui
         ((y + (5+1) * size - 1) < 0) // Clip top
         )
     return;
-    
+
     unsigned long currentBit;
     if (c % 2)  currentBit = (c-33) * (5 * 4) + 4;
     else        currentBit = (c-32) * (5 * 4);
