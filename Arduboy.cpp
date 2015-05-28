@@ -513,6 +513,7 @@ void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w,
 
   int yOffset = abs(y) % 8;
   int sRow = y / 8;
+  int ofs2;
   if (y < 0) {
     sRow--;
     yOffset = 8 - yOffset;
@@ -528,6 +529,9 @@ void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w,
       // uint8_t bofs = *bitmap+(a*w);
       uint8_t *bofs = (uint8_t *)bitmap+(a*w);
       int ofs = (bRow*WIDTH) + x;
+      if (yOffset) {
+        ofs2 = ((bRow+1)*WIDTH) + x;
+      }
       for (uint8_t iCol = 0; iCol<w; iCol++) {
         int iColx = (int)iCol + x;
         // if (iColx > (WIDTH-1)) break;
@@ -537,11 +541,13 @@ void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w,
             else this->sBuffer[ofs]  &= ~(pgm_read_byte(bofs++) << yOffset);
           }
           if (yOffset) {
-            if (color) this->sBuffer[ ((bRow+1)*WIDTH) + iColx  ] = pgm_read_byte(bitmap+(a*w)+iCol) >> (8-yOffset);
-            else this->sBuffer[ ((bRow+1)*WIDTH) + iColx  ] &= ~(pgm_read_byte(bitmap+(a*w)+iCol) >> (8-yOffset));
+            if (color) this->sBuffer[ofs2] = pgm_read_byte(bofs++) >> (8-yOffset);
+            else this->sBuffer[ofs2] &= ~(pgm_read_byte(bofs++) >> (8-yOffset));
           }
         }
         ofs++;
+        ofs2++;
+        bofs++;
       }
     }
   }
