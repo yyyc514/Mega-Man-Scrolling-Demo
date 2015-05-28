@@ -549,7 +549,7 @@ void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w,
           }
         }
         ofs++;
-        ofs2++;
+        if (yOffset) ofs2++;
         bofs++;
       }
     }
