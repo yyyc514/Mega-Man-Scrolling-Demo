@@ -521,15 +521,15 @@ void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w,
     uint8_t bRow = sRow + a;
     if (bRow > (HEIGHT/8)-1) break;
     if (bRow > -2) {
+      int bofs = bitmap+(a*w);
+      int ofs = (bRow*WIDTH);
       for (uint8_t iCol = 0; iCol<w; iCol++) {
         uint8_t iColx = iCol + x;
-        int ofs = (bRow*WIDTH) + iColx;
-        int bofs = bitmap+(a*w)+iCol;
         if (iColx > (WIDTH-1)) break;
         if (iColx > 0) {
           if (bRow >= 0) {
-            if (color) this->sBuffer[ofs]  |= pgm_read_byte(bofs) << yOffset;
-            else this->sBuffer[ofs]  &= ~(pgm_read_byte(bofs) << yOffset);
+            if (color) this->sBuffer[ofs++]  |= pgm_read_byte(bofs++) << yOffset;
+            else this->sBuffer[ofs++]  &= ~(pgm_read_byte(bofs++) << yOffset);
           }
           if (yOffset) {
             if (color) this->sBuffer[ ((bRow+1)*WIDTH) + iColx  ] |= pgm_read_byte(bitmap+(a*w)+iCol) >> (8-yOffset);
