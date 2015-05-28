@@ -517,6 +517,10 @@ void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w,
     sRow--;
     yOffset = 8 - yOffset;
   }
+  // don't loop over the full width if it will not be rendered anyways
+  if (x+w > WIDTH-1) {
+    w = WIDTH-x;
+  }
   for (uint8_t a = 0; a < h/8; a++) {
     uint8_t bRow = sRow + a;
     if (bRow > (HEIGHT/8)-1) break;
@@ -525,7 +529,7 @@ void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w,
       uint8_t *bofs = (uint8_t *)bitmap+(a*w);
       int ofs = (bRow*WIDTH) + x;
       for (uint8_t iCol = 0; iCol<w; iCol++) {
-        uint8_t iColx = iCol + x;
+        int iColx = (int)iCol + x;
         if (iColx > (WIDTH-1)) break;
         if (iColx > 0) {
           if (bRow >= 0) {
