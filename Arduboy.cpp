@@ -518,10 +518,10 @@ void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w,
 
   int xOffset, ofs, ofs2;
   int8_t yOffset = abs(y) % 8;
-  byte sRow = y / 8;
+  int8_t sRow = y / 8;
   uint8_t loop_w, loop_h, start_h;
 
-  if (y < 0) {
+  if (y < 0 && yOffset > 0) {
     sRow--;
     yOffset = 8 - yOffset;
   }
@@ -548,14 +548,25 @@ void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w,
     start_h = 0;
   }
 
+  // setCursor(100,0);
+  // println(start_h);
+  // setCursor(100,8);
+  // println(loop_h);
+  // setCursor(100,16);
+  // println(yOffset);
+  // setCursor(100,24);
+
+  // if (sRow + loop_h - 1 > (HEIGHT/8)-1)
+  if (sRow + loop_h > (HEIGHT/8)) {
+    loop_h = (HEIGHT/8) - sRow;
+  }
+
   for (uint8_t a = start_h; a < loop_h; a++) {
-    uint8_t bRow = sRow + a;
-    if (bRow > (HEIGHT/8)-1) break;
+    int8_t bRow = sRow + a;
+    // if (bRow > (HEIGHT/8)-1) break;
     uint8_t *bofs = (uint8_t *)bitmap+(a*w) + xOffset;
     ofs = (bRow*WIDTH) + x + xOffset;
-    // if (yOffset>0) {
-      ofs2 = ((bRow+1)*WIDTH) + x + xOffset;
-    // }
+    ofs2 = ((bRow+1)*WIDTH) + x + xOffset;
     for (uint8_t iCol = xOffset; iCol < loop_w; iCol++) {
       // int iColx = (int)iCol + x;
       // if (iColx > (WIDTH-1)) break;
@@ -572,8 +583,7 @@ void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w,
         }
       // }
       ofs++;
-      // if (yOffset > 0)
-        ofs2++;
+      ofs2++;
       bofs++;
     }
   }
