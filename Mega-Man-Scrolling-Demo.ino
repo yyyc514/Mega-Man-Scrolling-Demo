@@ -43,6 +43,8 @@ byte musicMode = 1;   //the current user-selected music mode (1 = play music)
 long before;
 long after;
 
+int microDelay=100;
+
 void setup()
 {
     SPI.begin();
@@ -50,6 +52,8 @@ void setup()
 
     buttons = display.getInput();  //begin with a quick check of the A button
     if(buttons & A_BUTTON) {musicMode = 0;}  //if the user wants to start the program muted
+
+    drawMode = 1;
 }
 
 void loop() {
@@ -75,6 +79,7 @@ void loop() {
                                  //5 of them - one will usually be partly offscreen on the left
                                  //side, and one on the right side
     display.drawBitmap((x * 32) - BGmove, 0, bg + ((bool)frame * SIZE_BG), 32, 64, 1);
+    // display.drawBitmap((x * 32) - BGmove, (x%2==0) ? 8 : -8, bg + ((bool)frame * SIZE_BG), 32, 64, 1);
   }
 
   //draw three barrels
@@ -91,14 +96,23 @@ void loop() {
                                    megaman + (megaFrame * (SIZE_MEGAMAN * 3)) + (SIZE_MEGAMAN * 2), 24, 24, 1);
 
   //copy the buffer to the screen and show us the picture we have built!
+
   after = micros();
-  display.setCursor(0,0);
-  display.print(after-before);
+  // display.setCursor(0,0);
+  // display.print(after-before);
+
+  // display.setCursor(88,0);
+  // display.print(microDelay);
   display.display();
 
 
+  // delay(9);
   //advance the greyscale control frame
   frame++;
+  delayMicroseconds(microDelay);
+  if (frame==1 && drawMode==1) {
+    // delay(2);
+  }
   if(frame > drawMode) {frame = 0;}
   if(drawMode == 0) {frame = 2;}
 
@@ -124,7 +138,17 @@ void loop() {
 
     if(buttons & LEFT) {drawMode = 2;}  //when you press left, you're in mode 0, which shows two shades of grey
     else if(buttons & RIGHT) {drawMode = 1;}  //when you press right, you're in mode 1, which shows one shade of grey
-    else if(buttons & UP) {drawMode = 0;}  //when you press up, you're in mode 2, which draws in black and white
+    // else if(buttons & UP) {drawMode = 0;}  //when you press up, you're in mode 2, which draws in black and white
+
+    if ((buttons & UP) ) {
+      microDelay+=20;
+    }
+
+    if ((buttons & DOWN)) {
+      if (microDelay>=20){
+        microDelay-=20;
+      }
+    }
 
     if(buttons & A_BUTTON) {musicMode = 0;}  //stop playing music when the player presses A
     else if(buttons & B_BUTTON) {musicMode = 1;}  //resume playing music when the player presses B
@@ -132,4 +156,6 @@ void loop() {
     //change the 10 here to make the animation faster or slower!  less is faster
     delta = millis() + 10;
   }
+
+
 }
