@@ -102,7 +102,7 @@ void loop() {
   if(frame > drawMode) {frame = 0;}
   if(drawMode == 0) {frame = 2;}
 
-  if(musicMode && !display.tune_playing) {display.tune_playscore(wily);}  //play music, and loop it if it finishes playing
+  // if(musicMode && !display.tune_playing) {display.tune_playscore(wily);}  //play music, and loop it if it finishes playing
   if(!musicMode && display.tune_playing) {display.tune_stopscore();}  //stop music if the user has chosen to turn it off
 
   //this delta calculation keeps the animation from happening too fast
