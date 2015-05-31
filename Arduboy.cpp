@@ -248,6 +248,11 @@ void Arduboy::start() {
     *csport &= ~cspinmask;
     clearDisplay();
     display();
+
+    if (getInput() & B00100000) {
+      while (true) {};
+    }
+
 	setTextSize(1);
 }
 void Arduboy::clearDisplay() {
@@ -540,23 +545,33 @@ void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w,
     if (bRow > (HEIGHT/8)-1) break;
     if (bRow > -2) {
       // uint8_t bofs = *bitmap+(a*w);
-      uint8_t *bofs = (uint8_t *)bitmap+(a*w) + xOffset;
+      // uint8_t *bofs = (uint8_t *)bitmap+(a*w) + xOffset;
+      uint8_t *bofs = (uint8_t *)bitmap+(a*w);
       int ofs = (bRow*WIDTH) + x;
       if (yOffset) {
         ofs2 = ((bRow+1)*WIDTH) + x;
       }
-      for (uint8_t iCol = xOffset; iCol < loop_w; iCol++) {
-        // if (iColx > (WIDTH-1)) break;
-        if (bRow >= 0) {
-          if (color) this->sBuffer[ofs++] = pgm_read_byte(bofs) << yOffset;
-          else this->sBuffer[ofs++]  &= ~(pgm_read_byte(bofs) << yOffset);
+      // for (uint8_t iCol = xOffset; iCol < loop_w; iCol++) {
+      for (uint8_t iCol = 0; iCol < loop_w; iCol++) {
+        int iColx = (int)iCol + x;
+        if (iColx > (WIDTH-1)) break;
+        if (iColx > 0) {
+          if (bRow >= 0) {
+            if (color) this->sBuffer[ofs] = pgm_read_byte(bofs) << yOffset;
+            else this->sBuffer[ofs]  &= ~(pgm_read_byte(bofs) << yOffset);
+          }
+          if (yOffset) {
+            if (color) this->sBuffer[ofs2] = pgm_read_byte(bofs) >> (8-yOffset);
+            else this->sBuffer[ofs2] &= ~(pgm_read_byte(bofs) >> (8-yOffset));
+          }
         }
-        if (yOffset) {
-          if (color) this->sBuffer[ofs2++] = pgm_read_byte(bofs) >> (8-yOffset);
-          else this->sBuffer[ofs2++] &= ~(pgm_read_byte(bofs) >> (8-yOffset));
-        }
-        // ofs++;
-        // if (yOffset) ofs2++;
+        ofs++;
+        // if (yOffset)
+        ofs2++;
+        // if (ofs>1023)
+        //   ofs=0;
+        // if (ofs2>1023)
+        //   ofs2=0;
         bofs++;
       }
     }
