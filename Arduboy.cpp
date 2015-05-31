@@ -519,20 +519,20 @@ void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w,
   int xOffset, ofs, ofs2;
   int8_t yOffset = abs(y) % 8;
   byte sRow = y / 8;
-  uint8_t loop_w, loop_h;
+  uint8_t loop_w, loop_h, start_h;
 
   if (y < 0) {
     sRow--;
     yOffset = 8 - yOffset;
   }
 
-  // don't loop over the full width if it will not be rendered anyways
+  // if the right side of the render is offscreen skip those loops
   if (x+w > WIDTH-1) {
     loop_w = WIDTH-x;
   } else {
     loop_w = w;
   }
-  // if x is off screen we can completely skip some loops against bitmap
+  // if the left side of the render is offscreen skip those loops
   if (x<0) {
     xOffset = abs(x);
   } else {
@@ -541,35 +541,40 @@ void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w,
 
   loop_h = h/8 + (yOffset > 0 ? 1 : 0); // divide, then round up
 
-  for (uint8_t a = 0; a < loop_h; a++) {
+  // if the top side of the render is offscreen skip those loops
+  if (sRow < -1) {
+    start_h = abs(sRow)-1;
+  } else {
+    start_h = 0;
+  }
+
+  for (uint8_t a = start_h; a < loop_h; a++) {
     uint8_t bRow = sRow + a;
     if (bRow > (HEIGHT/8)-1) break;
-    if (bRow > -2) {
-      uint8_t *bofs = (uint8_t *)bitmap+(a*w) + xOffset;
-      ofs = (bRow*WIDTH) + x + xOffset;
-      // if (yOffset>0) {
-        ofs2 = ((bRow+1)*WIDTH) + x + xOffset;
+    uint8_t *bofs = (uint8_t *)bitmap+(a*w) + xOffset;
+    ofs = (bRow*WIDTH) + x + xOffset;
+    // if (yOffset>0) {
+      ofs2 = ((bRow+1)*WIDTH) + x + xOffset;
+    // }
+    for (uint8_t iCol = xOffset; iCol < loop_w; iCol++) {
+      // int iColx = (int)iCol + x;
+      // if (iColx > (WIDTH-1)) break;
+      // if (iColx > 0) {
+        if (bRow >= 0) {
+          if (color)
+            sBuffer[ofs] = pgm_read_byte(bofs) << yOffset;
+          else sBuffer[ofs]  &= ~(pgm_read_byte(bofs) << yOffset);
+        }
+        if (yOffset > 0) {
+          if (color)
+            sBuffer[ofs2] = pgm_read_byte(bofs) >> (8-yOffset);
+          else sBuffer[ofs2] &= ~(pgm_read_byte(bofs) >> (8-yOffset));
+        }
       // }
-      for (uint8_t iCol = xOffset; iCol < loop_w; iCol++) {
-        // int iColx = (int)iCol + x;
-        // if (iColx > (WIDTH-1)) break;
-        // if (iColx > 0) {
-          if (bRow >= 0) {
-            if (color)
-              this->sBuffer[ofs] = pgm_read_byte(bofs) << yOffset;
-            else this->sBuffer[ofs]  &= ~(pgm_read_byte(bofs) << yOffset);
-          }
-          if (yOffset > 0) {
-            if (color)
-              this->sBuffer[ofs2] = pgm_read_byte(bofs) >> (8-yOffset);
-            else this->sBuffer[ofs2] &= ~(pgm_read_byte(bofs) >> (8-yOffset));
-          }
-        // }
-        ofs++;
-        // if (yOffset > 0)
-          ofs2++;
-        bofs++;
-      }
+      ofs++;
+      // if (yOffset > 0)
+        ofs2++;
+      bofs++;
     }
   }
 }
