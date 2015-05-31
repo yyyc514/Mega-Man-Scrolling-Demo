@@ -516,6 +516,8 @@ void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w,
   if (x+w < 0 || x > WIDTH-1 || y+h < 0 || y > HEIGHT-1)
     return;
 
+  // xOffset technically doesn't need to be 16 bit but the math operations
+  // are measurably faster if it is
   int xOffset, ofs, ofs2;
   int8_t yOffset = abs(y) % 8;
   int8_t sRow = y / 8;
@@ -539,13 +541,18 @@ void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w,
     xOffset = 0;
   }
 
-  loop_h = h/8 + (yOffset > 0 ? 1 : 0); // divide, then round up
-
   // if the top side of the render is offscreen skip those loops
   if (sRow < -1) {
     start_h = abs(sRow)-1;
   } else {
     start_h = 0;
+  }
+
+  loop_h = h/8 + (yOffset > 0 ? 1 : 0); // divide, then round up
+
+  // if (sRow + loop_h - 1 > (HEIGHT/8)-1)
+  if (sRow + loop_h > (HEIGHT/8)) {
+    loop_h = (HEIGHT/8) - sRow;
   }
 
   // setCursor(100,0);
@@ -556,10 +563,6 @@ void Arduboy::drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w,
   // println(yOffset);
   // setCursor(100,24);
 
-  // if (sRow + loop_h - 1 > (HEIGHT/8)-1)
-  if (sRow + loop_h > (HEIGHT/8)) {
-    loop_h = (HEIGHT/8) - sRow;
-  }
 
   for (uint8_t a = start_h; a < loop_h; a++) {
     int8_t bRow = sRow + a;
