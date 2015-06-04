@@ -45,8 +45,19 @@ class Arduboy : public Print {
     void fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
     void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
     void fillTriangle (int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
-    void drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint8_t color);
+
     void drawMaskedBitmap(int16_t x, int16_t y, const uint8_t *bitmap, const uint8_t *mask, int16_t w, int16_t h, uint16_t color);
+
+    void drawSprite(int16_t x, int16_t y, const uint8_t *bitmap);
+    void drawSprite(int16_t x, int16_t y, const uint8_t *bitmap, const uint8_t *mask);
+    void drawSprite(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t frame);
+    void drawSprite(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t frame, const uint8_t *mask, uint8_t sprite_frame);
+    // compatibility
+    void drawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint8_t color);
+    // core bitmap render
+    void drawComplexBitmap(int16_t x, int16_t y, const uint8_t *bitmap, const uint8_t *mask,
+      int16_t w, int16_t h, uint8_t draw_mode);
+
     void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg, uint8_t size);
     void setCursor(int16_t x, int16_t y);
     void setTextSize(uint8_t s);

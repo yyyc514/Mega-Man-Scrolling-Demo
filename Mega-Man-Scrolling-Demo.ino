@@ -51,13 +51,13 @@ int tick=0;
 void setup()
 {
     SPI.begin();
-    SPI.setClockDivider(SPI_CLOCK_DIV2);
+    // SPI.setClockDivider(SPI_CLOCK_DIV2);
     display.start();
 
     buttons = display.getInput();  //begin with a quick check of the A button
     if(buttons & A_BUTTON) {musicMode = 0;}  //if the user wants to start the program muted
 
-    drawMode = 1;
+    drawMode = 0;
     next_micros = micros();
 }
 
@@ -83,9 +83,9 @@ void loop() {
   for(byte x = 0; x < 5; x++) {  //the background "slice" is 32 pixels wide, so we need to draw
                                  //5 of them - one will usually be partly offscreen on the left
                                  //side, and one on the right side
-    for (byte y=0; y<4; y++) {
-    display.drawBitmap((x * 32) - BGmove, y*16, bg + ((bool)frame * SIZE_BG), 32, 16, 1);
-    }
+    // for (byte y=0; y<4; y++) {
+    display.drawBitmap((x * 32) - BGmove, 0, bg + ((bool)frame * SIZE_BG), 32, 64, 1);
+    // }
     // display.drawBitmap((x * 32) - BGmove, (x%2==0) ? 8 : -8, bg + ((bool)frame * SIZE_BG), 32, 64, 1);
   }
 
@@ -108,12 +108,12 @@ void loop() {
   // display.setCursor(0,0);
   // display.print(after-before);
 
-  if (tick%1024==0) {
-    display.setCursor(50,16);
-    display.println(microDelay);
-    display.display();
-    delay(250);
-    }
+  // if (tick%1024==0) {
+  //   display.setCursor(50,16);
+  //   display.println(microDelay);
+  //   display.display();
+  //   delay(250);
+  //   }
     tick++;
 
 
