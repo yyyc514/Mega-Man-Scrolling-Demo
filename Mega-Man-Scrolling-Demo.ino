@@ -43,17 +43,22 @@ byte musicMode = 1;   //the current user-selected music mode (1 = play music)
 long before;
 long after;
 
-int microDelay=100;
+int microDelay=7480;
+long next_micros =0;
+unsigned int voltage=0;
 
+int tick=0;
 void setup()
 {
     SPI.begin();
+    SPI.setClockDivider(SPI_CLOCK_DIV2);
     display.start();
 
     buttons = display.getInput();  //begin with a quick check of the A button
     if(buttons & A_BUTTON) {musicMode = 0;}  //if the user wants to start the program muted
 
     drawMode = 1;
+    next_micros = micros();
 }
 
 void loop() {
@@ -78,7 +83,9 @@ void loop() {
   for(byte x = 0; x < 5; x++) {  //the background "slice" is 32 pixels wide, so we need to draw
                                  //5 of them - one will usually be partly offscreen on the left
                                  //side, and one on the right side
-    display.drawBitmap((x * 32) - BGmove, 0, bg + ((bool)frame * SIZE_BG), 32, 64, 1);
+    for (byte y=0; y<4; y++) {
+    display.drawBitmap((x * 32) - BGmove, y*16, bg + ((bool)frame * SIZE_BG), 32, 16, 1);
+    }
     // display.drawBitmap((x * 32) - BGmove, (x%2==0) ? 8 : -8, bg + ((bool)frame * SIZE_BG), 32, 64, 1);
   }
 
@@ -101,15 +108,31 @@ void loop() {
   // display.setCursor(0,0);
   // display.print(after-before);
 
-  // display.setCursor(88,0);
-  // display.print(microDelay);
-  display.display();
+  if (tick%1024==0) {
+    display.setCursor(50,16);
+    display.println(microDelay);
+    display.display();
+    delay(250);
+    }
+    tick++;
+
+
+  // display.println(voltage);
+
 
 
   // delay(9);
   //advance the greyscale control frame
   frame++;
-  delayMicroseconds(microDelay);
+  // delayMicroseconds(microDelay);
+  while (micros() < next_micros ) {
+
+  }
+  // last_micros += microDelay;
+  next_micros=micros()+microDelay;
+  display.display();
+
+
   if (frame==1 && drawMode==1) {
     // delay(2);
   }
@@ -117,7 +140,7 @@ void loop() {
   if(drawMode == 0) {frame = 2;}
 
   // if(musicMode && !display.tune_playing) {display.tune_playscore(wily);}  //play music, and loop it if it finishes playing
-  if(!musicMode && display.tune_playing) {display.tune_stopscore();}  //stop music if the user has chosen to turn it off
+  // if(!musicMode && display.tune_playing) {display.tune_stopscore();}  //stop music if the user has chosen to turn it off
 
   //this delta calculation keeps the animation from happening too fast
   if(millis() >= delta) {
@@ -141,17 +164,28 @@ void loop() {
     // else if(buttons & UP) {drawMode = 0;}  //when you press up, you're in mode 2, which draws in black and white
 
     if ((buttons & UP) ) {
-      microDelay+=20;
+      microDelay+=10;
     }
 
     if ((buttons & DOWN)) {
-      if (microDelay>=20){
-        microDelay-=20;
+      if (microDelay>=10){
+        microDelay-=10;
       }
     }
 
     if(buttons & A_BUTTON) {musicMode = 0;}  //stop playing music when the player presses A
     else if(buttons & B_BUTTON) {musicMode = 1;}  //resume playing music when the player presses B
+
+    // get volate
+    // ADMUX = _BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+    // // we also need MUX5 for temperature check
+
+    // delay(2); // Wait for ADMUX setting to settle
+    // ADCSRA |= _BV(ADSC); // Start conversion
+    // while (bit_is_set(ADCSRA,ADSC)); // measuring
+
+    // voltage = 1125300L  / ADCW;
+
 
     //change the 10 here to make the animation faster or slower!  less is faster
     delta = millis() + 10;

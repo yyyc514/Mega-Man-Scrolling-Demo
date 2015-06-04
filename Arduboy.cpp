@@ -255,6 +255,19 @@ void Arduboy::start() {
 
 	setTextSize(1);
 }
+
+void spi_write(uint8_t data) {
+  SPDR = data;
+  /*
+   * The following NOP introduces a small delay that can prevent the wait
+   * loop form iterating when running at the maximum speed. This gives
+   * about 10% more speed, even if it seems counter-intuitive. At lower
+   * speeds it is unnoticed.
+   */
+  asm volatile("nop");
+  while (!(SPSR & _BV(SPIF))) ; // wait
+}
+
 void Arduboy::clearDisplay() {
     for (int a = 0; a < (HEIGHT*WIDTH)/8; a++) sBuffer[a] = 0x00;
 }
@@ -755,10 +768,10 @@ void Arduboy::display() {
   drawScreen(sBuffer);
 }
 void Arduboy::drawScreen(const unsigned char *image) {
-  for (int a = 0; a < (HEIGHT*WIDTH)/8; a++) { SPI.transfer(pgm_read_byte(image + a)); }
+  for (int a = 0; a < (HEIGHT*WIDTH)/8; a++) { spi_write(pgm_read_byte(image + a)); }
 }
 void Arduboy::drawScreen(unsigned char image[]) {
-  for (int a = 0; a < (HEIGHT*WIDTH)/8; a++) { SPI.transfer(image[a]); }
+  for (int a = 0; a < (HEIGHT*WIDTH)/8; a++) { spi_write(image[a]); }
 }
 uint8_t Arduboy::width() { return WIDTH; }
 uint8_t Arduboy::height() { return HEIGHT; }
