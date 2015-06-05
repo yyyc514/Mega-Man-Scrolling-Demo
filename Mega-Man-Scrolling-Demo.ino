@@ -51,13 +51,13 @@ int tick=0;
 void setup()
 {
     SPI.begin();
-    // SPI.setClockDivider(SPI_CLOCK_DIV2);
+    SPI.setClockDivider(SPI_CLOCK_DIV2);
     display.start();
 
     buttons = display.getInput();  //begin with a quick check of the A button
     if(buttons & A_BUTTON) {musicMode = 0;}  //if the user wants to start the program muted
 
-    drawMode = 0;
+    drawMode = 1;
     next_micros = micros();
 }
 
@@ -80,27 +80,35 @@ void loop() {
   //black space gets Mega Man painted on it.
 
   before = micros();
+  display.clearDisplay();
   for(byte x = 0; x < 5; x++) {  //the background "slice" is 32 pixels wide, so we need to draw
                                  //5 of them - one will usually be partly offscreen on the left
                                  //side, and one on the right side
     // for (byte y=0; y<4; y++) {
-    display.drawBitmap((x * 32) - BGmove, 0, bg + ((bool)frame * SIZE_BG), 32, 64, 1);
+    display.drawSprite((x * 32) - BGmove, 0, bg, frame%2);
     // }
     // display.drawBitmap((x * 32) - BGmove, (x%2==0) ? 8 : -8, bg + ((bool)frame * SIZE_BG), 32, 64, 1);
   }
 
   //draw three barrels
-  display.drawBitmap(barrelx, 32, barrel + ((bool)frame * SIZE_BARREL), 16, 16, 1);
-  display.drawBitmap(barrelx + 32, 32, barrel + ((bool)frame * SIZE_BARREL), 16, 16, 1);
-  display.drawBitmap(barrelx + 32, 24, barrel + ((bool)frame * SIZE_BARREL), 16, 16, 1);
+  // display.drawBitmap(barrelx, 32, barrel + ((bool)frame * SIZE_BARREL), 16, 16, 1);
+  // display.drawBitmap(barrelx + 32, 32, barrel + ((bool)frame * SIZE_BARREL), 16, 16, 1);
+  // display.drawBitmap(barrelx + 32, 24, barrel + ((bool)frame * SIZE_BARREL), 16, 16, 1);
+  display.drawSprite(barrelx, 32, barrel, frame%2);
+  display.drawSprite(barrelx + 32, 32, barrel, frame%2);
+  display.drawSprite(barrelx + 32, 24, barrel, frame%2);
+
 
   //draw a cloud
-  display.drawBitmap(cloudx / 2, 0, cloud + ((bool)frame * SIZE_CLOUD), 48, 8, 1);
+  // display.drawBitmap(cloudx / 2, 0, cloud + ((bool)frame * SIZE_CLOUD), 48, 8, 1);
+  display.drawSprite(cloudx / 2, 0, cloud, frame%2);
 
   //draw Mega Man, with his sprite masked in order to do transparency
   //the megaFrame calculation skips downward to later frames of his run animation
-  display.drawMaskedBitmap(52, 24, megaman + (megaFrame * (SIZE_MEGAMAN * 3)) + ((bool)frame * SIZE_MEGAMAN),
-                                   megaman + (megaFrame * (SIZE_MEGAMAN * 3)) + (SIZE_MEGAMAN * 2), 24, 24, 1);
+  // display.drawMaskedBitmap(52, 24, megaman + (megaFrame * (SIZE_MEGAMAN * 3)) + ((bool)frame * SIZE_MEGAMAN),
+  //                                  megaman + (megaFrame * (SIZE_MEGAMAN * 3)) + (SIZE_MEGAMAN * 2), 24, 24, 1);
+
+  display.drawSprite(52,24,megaman, megaFrame*2 + (frame%2), megaman_mask, megaFrame);
 
   //copy the buffer to the screen and show us the picture we have built!
 

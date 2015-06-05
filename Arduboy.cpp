@@ -553,7 +553,10 @@ void Arduboy::drawSprite(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t fr
     if (mask!=0)
       mask += sprite_frame * frame_offset;
   }
+
+  // drawComplexBitmap(x, y, bitmap, mask, width, height, mask==0 ? SPRITE_UNMASKED : SPRITE_MASKED);
   drawComplexBitmap(x, y, bitmap, mask, width, height, mask==0 ? SPRITE_UNMASKED : SPRITE_MASKED);
+  // drawComplexBitmap(x, y, bitmap, mask, width, height, SPRITE_IS_MASK);
 }
 
 
@@ -628,7 +631,7 @@ void Arduboy::drawComplexBitmap(int16_t x, int16_t y,
   uint8_t bottom_mask;
   switch (draw_mode) {
     case SPRITE_UNMASKED:
-    top_mask = ~((1<<yOffset)-1);
+    top_mask = ((1<<yOffset)-1);
     bottom_mask= ~(0xFF >> (8-yOffset));
     // really if yOffset = 0 you have a faster case here that could be
     // optimized
@@ -696,7 +699,7 @@ void Arduboy::drawComplexBitmap(int16_t x, int16_t y,
             data = sBuffer[ofs];
             data &= (pgm_read_byte(mask_ofs) << yOffset);
             data |= (pgm_read_byte(bofs) << yOffset);
-            sBuffer[ofs];
+            sBuffer[ofs] = data;
           }
           if (yOffset > 0) {
             data = sBuffer[ofs+WIDTH];
@@ -705,6 +708,7 @@ void Arduboy::drawComplexBitmap(int16_t x, int16_t y,
             sBuffer[ofs+WIDTH] = data;
           }
         ofs++;
+        mask_ofs++;
         bofs++;
       }
       sRow++;
